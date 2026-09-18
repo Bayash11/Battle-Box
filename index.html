@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Battle Box - 読み合い野球</title>
+<style>
+:root{
+  --bg:#07131f;
+  --panel:#0e2132;
+  --panel2:#112b3f;
+  --line:#2b4960;
+  --text:#f4f7fb;
+  --muted:#91a7b8;
+  --accent:#49a7ff;
+  --accent2:#70d49b;
+  --danger:#ff6b6b;
+  --warn:#ffc857;
+  --strike:#173f58;
+  --ball:#0b1b29;
+  --used:#263745;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#06101a 0%,#091827 100%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+button{font:inherit}
+.app{max-width:520px;margin:0 auto;padding:16px 14px 40px}
+.header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.brand h1{font-size:24px;line-height:1;margin:4px 0 6px;letter-spacing:.03em}
+.brand p{margin:0;color:var(--muted);font-size:12px}
+.badge{padding:8px 10px;border-radius:999px;background:#12324a;color:#bfe2ff;font-size:11px;font-weight:700;white-space:nowrap}
+.card{background:rgba(14,33,50,.94);border:1px solid #17344a;border-radius:18px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);margin-bottom:12px}
+.scorebar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.player{font-size:12px;color:var(--muted)}
+.player strong{display:block;color:var(--text);font-size:15px;margin-top:2px}
+.centerCount{text-align:center}
+.count{font-size:18px;font-weight:800;letter-spacing:.04em}.subcount{font-size:10px;color:var(--muted);margin-top:2px}
+.sectionTitle{font-size:13px;color:#b8cada;font-weight:700;margin:2px 0 10px}
+.phaseTitle{font-size:22px;font-weight:900;margin:2px 0 5px}.phaseSub{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px}
+.segment{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.segment.three{grid-template-columns:1fr 1fr 1fr}
+.choice{border:1px solid var(--line);background:#0a1a27;color:var(--text);border-radius:13px;padding:12px 8px;font-weight:800}.choice.active{background:#18476a;border-color:#5ab6ff;box-shadow:0 0 0 1px #5ab6ff inset}.choice.take.active{background:#5a4510;border-color:#ffc857}
+.zoneWrap{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;aspect-ratio:1/1;margin:10px 0 12px}
+.cell{position:relative;border:1px solid #28465a;border-radius:11px;background:var(--ball);color:#dceaf4;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;min-width:0;touch-action:manipulation}.cell.strike{background:var(--strike);border-color:#42677f}.cell.selected{outline:3px solid var(--accent);z-index:2}.cell.previewEnd::after{content:"到達";position:absolute;bottom:3px;right:4px;font-size:8px;color:var(--accent2)}.cell.used{background:var(--used);color:#667988;opacity:.65;text-decoration:line-through}.cell.invalid{opacity:.25}.cell.pitchStart{box-shadow:0 0 0 3px var(--accent) inset}.cell.pitchEnd{box-shadow:0 0 0 3px var(--accent2) inset}.cell.batterPick::before{content:"打";position:absolute;top:4px;left:5px;font-size:9px;color:var(--warn)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:10px;color:var(--muted);margin:4px 0 8px}.legend span{display:flex;align-items:center;gap:5px}.dot{width:9px;height:9px;border-radius:3px;display:inline-block;background:#173f58;border:1px solid #42677f}.dot.ball{background:#0b1b29}.dot.used{background:#263745}.dot.end{background:#70d49b}
+.primary{width:100%;border:0;border-radius:14px;padding:14px;background:linear-gradient(135deg,#258ee5,#46b1ff);color:#fff;font-weight:900;font-size:15px}.primary:disabled{opacity:.35}.secondary{width:100%;border:1px solid var(--line);border-radius:14px;padding:13px;background:#0a1a27;color:#dceaf4;font-weight:800}.danger{border-color:#5e3440;color:#ffadb6}
+.note{font-size:11px;color:var(--muted);line-height:1.65;margin-top:9px}.hidden{display:none!important}
+.handoff{text-align:center;padding:30px 12px}.handoffIcon{font-size:42px}.handoff h2{margin:10px 0 6px;font-size:24px}.handoff p{color:var(--muted);font-size:13px;line-height:1.7}
+.resultHero{text-align:center;padding:8px 0 12px}.resultLabel{font-size:12px;color:var(--muted)}.resultText{font-size:30px;font-weight:950;margin:6px 0}.resultDetail{font-size:13px;color:#c5d7e4;line-height:1.65}.streak{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:#182b3a;color:#d5ebfa;font-size:11px;font-weight:800;margin-top:9px}
+.log{display:flex;flex-direction:column;gap:7px;max-height:220px;overflow:auto}.logItem{padding:9px 10px;border-radius:12px;background:#0b1b28;font-size:11px;color:#bfd0dc;line-height:1.5}.logItem strong{color:#fff}
+.ruleGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rule{padding:10px;border:1px solid #19384f;border-radius:12px;background:#0a1a27}.rule b{display:block;font-size:11px;margin-bottom:4px}.rule span{font-size:10px;color:var(--muted);line-height:1.5;display:block}
+.footerBtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.small{font-size:10px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="brand"><h1>BATTLE BOX</h1><p>球種 × コース × 読み合い</p></div>
+    <div class="badge">PASS & PLAY</div>
+  </div>
+
+  <div class="card scorebar">
+    <div class="player">攻撃<strong id="batterName">PLAYER A</strong></div>
+    <div class="centerCount"><div class="count"><span id="balls">0</span>B - <span id="strikes">0</span>S</div><div class="subcount">第 <span id="pitchNo">1</span> 球</div></div>
+    <div class="player" style="text-align:right">守備<strong id="pitcherName">PLAYER B</strong></div>
+  </div>
+
+  <section id="pitcherPhase" class="card">
+    <div class="phaseTitle">投手の選択</div>
+    <div class="phaseSub">球種と「投げ始める位置」を選択。相手には見えません。</div>
+    <div class="sectionTitle">球種</div>
+    <div class="segment">
+      <button class="choice active" data-pitch="fastball">ストレート</button>
+      <button class="choice" data-pitch="break">変化球 ↘</button>
+    </div>
+    <div class="sectionTitle">スタート位置</div>
+    <div id="pitcherZone" class="zoneWrap"></div>
+    <div class="legend"><span><i class="dot"></i>ストライクゾーン</span><span><i class="dot ball"></i>ボールゾーン</span><span><i class="dot used"></i>使用済み</span></div>
+    <button id="lockPitch" class="primary" disabled>投球を確定</button>
+    <div class="note">変化球は選んだマスから <b>右へ1・下へ1</b> 移動します。5×5の外に出る位置からは変化球を選べません。</div>
+  </section>
+
+  <section id="handoff" class="card hidden handoff">
+    <div class="handoffIcon">⚾️</div>
+    <h2>端末を打者へ</h2>
+    <p>投手の選択はロックしました。<br>打者に渡してから次へ進んでください。</p>
+    <button id="toBatter" class="primary">打者の選択へ</button>
+  </section>
+
+  <section id="batterPhase" class="card hidden">
+    <div class="phaseTitle">打者の選択</div>
+    <div class="phaseSub">球種と投手の「スタート位置」を読んで狙います。ボールゾーンは選べません。</div>
+    <div class="sectionTitle">狙い</div>
+    <div class="segment three">
+      <button class="choice active" data-bat="fastball">ストレート</button>
+      <button class="choice" data-bat="break">変化球</button>
+      <button class="choice take" data-bat="take">見送る</button>
+    </div>
+    <div id="batterSelectArea">
+      <div class="sectionTitle">予想するスタート位置</div>
+      <div id="batterZone" class="zoneWrap"></div>
+      <div class="legend"><span><i class="dot"></i>選択可能</span><span><i class="dot used"></i>使用済み</span></div>
+    </div>
+    <button id="lockBat" class="primary" disabled>狙いを確定</button>
+    <div class="note">完全一致は <b>球種 + スタート位置</b> の両方が一致した時だけです。</div>
+  </section>
+
+  <section id="resultPhase" class="card hidden">
+    <div class="resultHero">
+      <div class="resultLabel">RESULT</div>
+      <div id="resultText" class="resultText">—</div>
+      <div id="resultDetail" class="resultDetail"></div>
+      <div id="streakBadge" class="streak hidden"></div>
+    </div>
+    <div class="sectionTitle">今回の読み合い</div>
+    <div id="resultZone" class="zoneWrap"></div>
+    <div class="legend"><span><i class="dot" style="background:#49a7ff"></i>投手スタート</span><span><i class="dot end"></i>実際の到達</span><span><i class="dot" style="background:#ffc857"></i>打者予想</span></div>
+    <button id="nextPitch" class="primary">次の1球へ</button>
+  </section>
+
+  <section class="card">
+    <div class="sectionTitle">プロトタイプの決着ルール</div>
+    <div class="ruleGrid">
+      <div class="rule"><b>完全一致 1回目</b><span>「強いファウル」。読み連続数が1になる。</span></div>
+      <div class="rule"><b>2球連続で完全一致</b><span>フェア打球。高めほど長打になりやすい。</span></div>
+      <div class="rule"><b>不一致で振る</b><span>空振りストライク。読み連続数は0へ。</span></div>
+      <div class="rule"><b>見送る</b><span>変化後の最終位置が9マス内ならストライク、外ならボール。</span></div>
+    </div>
+    <div class="note">※「連続一致をどう長打に変えるか」はまだ仮ルールです。読み合い部分を試しやすくするため、一致1回目はファウル、2回連続一致でインプレーにしています。</div>
+  </section>
+
+  <section class="card">
+    <div class="sectionTitle">打席ログ</div>
+    <div id="log" class="log"><div class="logItem">まだ投球はありません。</div></div>
+    <div class="footerBtns">
+      <button id="newPA" class="secondary">打席をリセット</button>
+      <button id="swapRoles" class="secondary danger">攻守交代</button>
+    </div>
+  </section>
+</div>
+<script>
+(() => {
+  const state = {
+    batter: 'PLAYER A', pitcher: 'PLAYER B',
+    balls: 0, strikes: 0, pitchNo: 1,
+    pitchType: 'fastball', pitchStart: null, pitchEnd: null,
+    batType: 'fastball', batPick: null,
+    usedPitcher: new Set(), usedBatter: new Set(),
+    readStreak: 0, logs: [], paOver: false
+  };
+
+  const $ = (s) => document.querySelector(s);
+  const cells = Array.from({length:25}, (_,i)=>({i,row:Math.floor(i/5),col:i%5}));
+  const isStrike = (i) => { const r=Math.floor(i/5), c=i%5; return r>=1&&r<=3&&c>=1&&c<=3; };
+  const coord = (i) => `${Math.floor(i/5)+1}-${(i%5)+1}`;
+  const pitchName = t => t==='fastball' ? 'ストレート' : '変化球';
+
+  function calcEnd(start,type){
+    if(type==='fastball') return start;
+    const r=Math.floor(start/5), c=start%5;
+    if(r===4||c===4) return null;
+    return (r+1)*5 + (c+1);
+  }
+
+  function renderHeader(){
+    $('#batterName').textContent=state.batter;
+    $('#pitcherName').textContent=state.pitcher;
+    $('#balls').textContent=state.balls;
+    $('#strikes').textContent=state.strikes;
+    $('#pitchNo').textContent=state.pitchNo;
+  }
+
+  function renderPitcherZone(){
+    const wrap=$('#pitcherZone'); wrap.innerHTML='';
+    cells.forEach(({i})=>{
+      const b=document.createElement('button');
+      b.className='cell'+(isStrike(i)?' strike':'');
+      b.textContent=coord(i);
+      const invalidCurve = state.pitchType==='break' && calcEnd(i,'break')===null;
+      if(state.usedPitcher.has(i)) b.classList.add('used');
+      if(invalidCurve) b.classList.add('invalid');
+      if(state.pitchStart===i) b.classList.add('selected');
+      if(state.pitchStart!==null && calcEnd(state.pitchStart,state.pitchType)===i && i!==state.pitchStart) b.classList.add('previewEnd');
+      b.disabled=state.usedPitcher.has(i)||invalidCurve;
+      b.addEventListener('click',()=>{state.pitchStart=i; state.pitchEnd=calcEnd(i,state.pitchType); renderPitcherZone(); $('#lockPitch').disabled=false;});
+      wrap.appendChild(b);
+    });
+  }
+
+  function renderBatterZone(){
+    const wrap=$('#batterZone'); wrap.innerHTML='';
+    cells.forEach(({i})=>{
+      const b=document.createElement('button');
+      b.className='cell'+(isStrike(i)?' strike':'');
+      b.textContent=isStrike(i)?coord(i):'';
+      if(!isStrike(i)) b.classList.add('invalid');
+      if(state.usedBatter.has(i)) b.classList.add('used');
+      if(state.batPick===i) b.classList.add('selected');
+      b.disabled=!isStrike(i)||state.usedBatter.has(i);
+      b.addEventListener('click',()=>{state.batPick=i; renderBatterZone(); $('#lockBat').disabled=false;});
+      wrap.appendChild(b);
+    });
+  }
+
+  function renderResultZone(){
+    const wrap=$('#resultZone'); wrap.innerHTML='';
+    cells.forEach(({i})=>{
+      const d=document.createElement('div');
+      d.className='cell'+(isStrike(i)?' strike':''); d.textContent=coord(i);
+      if(i===state.pitchStart) d.classList.add('pitchStart');
+      if(i===state.pitchEnd) d.classList.add('pitchEnd');
+      if(i===state.batPick) d.classList.add('batterPick');
+      wrap.appendChild(d);
+    });
+  }
+
+  function show(id){ ['pitcherPhase','handoff','batterPhase','resultPhase'].forEach(x=>$('#'+x).classList.add('hidden')); $('#'+id).classList.remove('hidden'); }
+
+  function addLog(text){
+    state.logs.unshift(text);
+    $('#log').innerHTML=state.logs.map(x=>`<div class="logItem">${x}</div>`).join('');
+  }
+
+  function inningHitByHeight(cell){
+    const r=Math.floor(cell/5);
+    if(r===1) return {label:'ホームラン',detail:'高めを2球連続で読み切った。最大級の長打！'};
+    if(r===2) return {label:'二塁打',detail:'真ん中のコースを2球連続で読み切った。'};
+    return {label:'ヒット',detail:'低めを2球連続で読み切った。単打で出塁！'};
+  }
+
+  function endPlateAppearance(reason){
+    state.paOver=true;
+    $('#nextPitch').textContent='次の打席へ（攻守交代）';
+    addLog(`<strong>打席終了：</strong>${reason}`);
+  }
+
+  function resolve(){
+    renderResultZone();
+    let label='', detail='';
+    let exact=false;
+
+    if(state.batType==='take'){
+      state.readStreak=0;
+      if(isStrike(state.pitchEnd)){
+        state.strikes++;
+        label='見逃しストライク';
+        detail=`${pitchName(state.pitchType)}。スタート ${coord(state.pitchStart)} → 到達 ${coord(state.pitchEnd)}。`;
+      } else {
+        state.balls++;
+        label='ボール';
+        detail=`${pitchName(state.pitchType)}。最終到達 ${coord(state.pitchEnd)} はボールゾーン。`;
+      }
+    } else {
+      exact = state.batType===state.pitchType && state.batPick===state.pitchStart;
+      if(exact){
+        state.readStreak++;
+        if(state.readStreak===1){
+          label='読み勝ち！ 強いファウル';
+          detail=`球種もスタート位置も完全一致。次も当てればフェア打球になります。`;
+          if(state.strikes<2) state.strikes++;
+        } else {
+          const hit=inningHitByHeight(state.batPick);
+          label=hit.label;
+          detail=hit.detail;
+          endPlateAppearance(label);
+        }
+      } else {
+        state.readStreak=0;
+        state.strikes++;
+        label='空振り';
+        const gotType = state.batType===state.pitchType;
+        const gotCell = state.batPick===state.pitchStart;
+        if(gotType && !gotCell) detail='球種は読めたが、スタート位置が不一致。';
+        else if(!gotType && gotCell) detail='コースは読めたが、球種が不一致。';
+        else detail='球種・スタート位置ともに不一致。';
+      }
+    }
+
+    if(!state.paOver){
+      if(state.strikes>=3){ label='三振'; detail='3ストライク。投手の勝ち。'; endPlateAppearance('三振'); }
+      else if(state.balls>=4){ label='四球'; detail='4ボール。打者の勝ち。'; endPlateAppearance('四球'); }
+    }
+
+    $('#resultText').textContent=label;
+    $('#resultDetail').textContent=detail;
+    if(state.readStreak>0){ $('#streakBadge').classList.remove('hidden'); $('#streakBadge').textContent=`🔥 連続読み勝ち ${state.readStreak}`; }
+    else $('#streakBadge').classList.add('hidden');
+
+    const batDesc = state.batType==='take' ? '見送り' : `${pitchName(state.batType)} × ${coord(state.batPick)}`;
+    addLog(`<strong>${state.pitchNo}球目：</strong> 投手 ${pitchName(state.pitchType)} × ${coord(state.pitchStart)} → ${coord(state.pitchEnd)} ／ 打者 ${batDesc} ／ <strong>${label}</strong>`);
+    renderHeader();
+  }
+
+  function prepareNextPitch(){
+    state.pitchNo++;
+    state.pitchStart=null; state.pitchEnd=null; state.batPick=null;
+    state.pitchType='fastball'; state.batType='fastball';
+    document.querySelectorAll('[data-pitch]').forEach(b=>b.classList.toggle('active',b.dataset.pitch==='fastball'));
+    document.querySelectorAll('[data-bat]').forEach(b=>b.classList.toggle('active',b.dataset.bat==='fastball'));
+    $('#batterSelectArea').classList.remove('hidden');
+    $('#lockPitch').disabled=true; $('#lockBat').disabled=true;
+    $('#nextPitch').textContent='次の1球へ';
+    renderHeader(); renderPitcherZone(); renderBatterZone(); show('pitcherPhase');
+  }
+
+  function resetPA(swap=false){
+    if(swap){ const t=state.batter; state.batter=state.pitcher; state.pitcher=t; }
+    state.balls=0; state.strikes=0; state.pitchNo=1; state.readStreak=0; state.paOver=false;
+    state.usedPitcher=new Set(); state.usedBatter=new Set();
+    state.logs=[]; $('#log').innerHTML='<div class="logItem">新しい打席を開始しました。</div>';
+    state.pitchStart=null; state.pitchEnd=null; state.batPick=null; state.pitchType='fastball'; state.batType='fastball';
+    document.querySelectorAll('[data-pitch]').forEach(b=>b.classList.toggle('active',b.dataset.pitch==='fastball'));
+    document.querySelectorAll('[data-bat]').forEach(b=>b.classList.toggle('active',b.dataset.bat==='fastball'));
+    $('#batterSelectArea').classList.remove('hidden'); $('#lockPitch').disabled=true; $('#lockBat').disabled=true; $('#nextPitch').textContent='次の1球へ';
+    renderHeader(); renderPitcherZone(); renderBatterZone(); show('pitcherPhase');
+  }
+
+  document.querySelectorAll('[data-pitch]').forEach(btn=>btn.addEventListener('click',()=>{
+    state.pitchType=btn.dataset.pitch;
+    state.pitchStart=null; state.pitchEnd=null; $('#lockPitch').disabled=true;
+    document.querySelectorAll('[data-pitch]').forEach(b=>b.classList.toggle('active',b===btn));
+    renderPitcherZone();
+  }));
+
+  document.querySelectorAll('[data-bat]').forEach(btn=>btn.addEventListener('click',()=>{
+    state.batType=btn.dataset.bat;
+    document.querySelectorAll('[data-bat]').forEach(b=>b.classList.toggle('active',b===btn));
+    if(state.batType==='take'){
+      state.batPick=null; $('#batterSelectArea').classList.add('hidden'); $('#lockBat').disabled=false;
+    } else {
+      $('#batterSelectArea').classList.remove('hidden'); $('#lockBat').disabled=state.batPick===null; renderBatterZone();
+    }
+  }));
+
+  $('#lockPitch').addEventListener('click',()=>{
+    if(state.pitchStart===null) return;
+    state.pitchEnd=calcEnd(state.pitchStart,state.pitchType);
+    state.usedPitcher.add(state.pitchStart);
+    show('handoff');
+  });
+  $('#toBatter').addEventListener('click',()=>{ renderBatterZone(); show('batterPhase'); });
+  $('#lockBat').addEventListener('click',()=>{
+    if(state.batType!=='take'){
+      if(state.batPick===null) return;
+      state.usedBatter.add(state.batPick);
+    }
+    show('resultPhase'); resolve();
+  });
+  $('#nextPitch').addEventListener('click',()=>{ if(state.paOver) resetPA(true); else prepareNextPitch(); });
+  $('#newPA').addEventListener('click',()=>resetPA(false));
+  $('#swapRoles').addEventListener('click',()=>resetPA(true));
+
+  renderHeader(); renderPitcherZone(); renderBatterZone();
+})();
+</script>
+</body>
+</html>
